@@ -1,7 +1,8 @@
 import numpy as np
 import re
+import random
 import tkinter as tk
-from tkinter import * 
+from tkinter import *
 from tkinter import filedialog
 from tkinter import scrolledtext
 
@@ -53,6 +54,49 @@ Text_a = Text_a_last
 print('Кол-во верных ответов:', flags.sum())
 
 
+################################################################
+# Выбор режима (Рандомный порядок вопросов vs обычный порядок).
+################################################################
+
+window = tk.Tk()
+window.title('Конструктор тестов (VladislavSoren)')
+window.resizable(width=False, height=False)
+window.geometry('240x60+600+300')
+window['bg'] = 'white'
+
+# функция закрытия окна при выборе рандомного режима
+def accept():
+    window.destroy()
+
+RandomState = tk.IntVar()  # в данную переменную записывается состояние box (1 или 0)
+box = Checkbutton(window, text='Включить случайный порядок?',
+                  variable=RandomState,
+                  font=('Arial Bold', 10),
+                  relief='solid',
+                  bd='1'
+                  )
+box['command'] = accept
+box.place(x=12, y=20)
+
+window.mainloop()
+
+
+#######################################
+# Получение списка с порядком вопросов.
+#######################################
+
+Text_q_dict = {}
+for i, q in enumerate(Text_q):
+    Text_q_dict[i] = q
+
+np1 = np.arange(len(Text_q))
+order_list = np1.tolist()
+
+# Если выбран рандомный режим, то перемешиваем порядок вопросов
+if RandomState.get():
+    random.shuffle(order_list)
+
+
 #########################
 # Блок обработки событий.
 #########################
@@ -63,27 +107,28 @@ class Block:
     def __init__(self, master):
 
         # счетчик количества вопросов
-        self.question_count = 0
+        self.qc = 0
 
         # счетчик количества правильных ответов
         self.true_points = 0
 
         # Инициализация вопроса и ответов
         self.quest = scrolledtext.ScrolledText(window, width=75, height=5)
-        self.quest.insert(tk.INSERT, Text_q[0])
+        index = order_list[self.qc]  # индекс вопроса определяем по order_list
+        self.quest.insert(tk.INSERT, Text_q[index])
 
         self.ans = scrolledtext.ScrolledText(window, width=75, height=15)
         self.ans.insert(tk.INSERT,
                         f'''
-        {Text_a[0]}
+        {Text_a[5 * index + 0]}
 
-        {Text_a[1]}
+        {Text_a[5 * index + 1]}
 
-        {Text_a[2]}
+        {Text_a[5 * index + 2]}
 
-        {Text_a[3]}
+        {Text_a[5 * index + 3]}
 
-        {Text_a[4]}
+        {Text_a[5 * index + 4]}
         '''
                         )
 
@@ -129,8 +174,11 @@ class Block:
     # Функция обработки события "ПРОВЕРКА" (нажатие кнопки "Ответить")
     def show_res(self):
 
+        # определяем текущий индекс вопроса
+        index = order_list[self.qc]
+
         # создаем вектор таргетов и ответов
-        targets = flags[5 * self.question_count: 5 * self.question_count + 5]
+        targets = flags[5 * index: 5 * index + 5]
         answers = np.zeros(5)
 
         answers[0] = self.check1.get()  # записываем состояние box1 (0 или 1) в нулевой бит вектора answers
@@ -156,15 +204,18 @@ class Block:
     def next_q(self):
 
         # инкрементируем счётчик вопросов
-        self.question_count += 1
+        self.qc += 1
 
         # когда ответили на все вопросы -> подводим итоги
-        if self.question_count >= len(Text_q):
+        if self.qc >= len(Text_q):
             self.FinalScore = tk.Label(window, text=f'Всего правильных ответов: {self.true_points}',
                                        font=('Arial Bold', 15), fg='white', bg='grey')
             self.FinalScore.place(x=360, y=210)
 
         else:  # в остальных же случаях:
+
+            # определяем текущий индекс вопроса
+            index = order_list[self.qc]
 
             # удаляем подсветку чекбоксов
             for i, box in enumerate([self.box1, self.box2, self.box3, self.box4, self.box5]):
@@ -173,21 +224,21 @@ class Block:
 
             # смена вопроса
             self.quest.delete('1.0', 'end')  # очищаем всё поле с индекса "1" до последнего "end"
-            self.quest.insert(tk.INSERT, Text_q[self.question_count])  # выводим следующий вопрос
+            self.quest.insert(tk.INSERT, Text_q[index])  # выводим следующий вопрос
 
             # смена ответов
             self.ans.delete('1.0', 'end')
             self.ans.insert(tk.INSERT,
                             f'''
-            {Text_a[5 * self.question_count + 0]}
+            {Text_a[5 * index + 0]}
 
-            {Text_a[5 * self.question_count + 1]}
+            {Text_a[5 * index + 1]}
 
-            {Text_a[5 * self.question_count + 2]}
+            {Text_a[5 * index + 2]}
 
-            {Text_a[5 * self.question_count + 3]}
+            {Text_a[5 * index + 3]}
 
-            {Text_a[5 * self.question_count + 4]}
+            {Text_a[5 * index + 4]}
             '''
                             )
 
@@ -202,7 +253,7 @@ class Block:
 window = tk.Tk()
 window.title('Конструктор тестов (VladislavSoren)')
 window.resizable(width=False, height=False)
-window.geometry('720x480')
+window.geometry('720x480+400+100')
 window['bg'] = 'grey'
 
 first_block = Block(window)
