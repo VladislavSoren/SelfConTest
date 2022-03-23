@@ -14,7 +14,7 @@ from tkinter import scrolledtext
 window = tk.Tk()
 
 # Пользователь указывает путь к txt файлу
-text_path = filedialog.askopenfilename(title='Выберите классификатор')
+text_path = filedialog.askopenfilename(title='Выберите тест')
 
 window.destroy()
 
@@ -25,7 +25,6 @@ with open(text_path, 'r', encoding='utf-8') as file:
 
 # разделяем файл на строки по пробелам и удаляем пустые строки
 Text = Text.split(sep='\n')
-Text = [i for i in Text if i != ('' or ' ')]
 
 # отделяем вопросы
 pattern = r'^\d{1,3}\.'  # строка начинается с 1 или 2 цыфр, а затем идёт точка (ограничение на 999 вопросов!!!)
@@ -247,7 +246,7 @@ class Block:
 
 
 #################
-# Основной цыкл.
+# Основной цикл.
 #################
 
 window = tk.Tk()
